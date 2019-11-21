@@ -7,14 +7,11 @@ contract Account {
   using ECDSA for *;
   using MerkleProof for *;
 
-  bytes32 public recoveryRoot;
   address public owner;
+  bytes32 public recoveryRoot;
   uint256 public sigsRequired;
   uint256 public seq;
   mapping (uint256 => address) sigs;
-
-  event Log(address a);
-  event LogHash(bytes32 a);
 
   modifier isOwner {
     require(msg.sender == owner, "Invalid sender");
@@ -57,7 +54,8 @@ contract Account {
         proposedOwner = sigs[i];
       }
 
-      owner = newOwner;
+      owner = proposedOwner;
+      seq = 0;
     }
   }
 }

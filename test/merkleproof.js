@@ -8,20 +8,24 @@ contract('Contracts', (accounts) => {
   let contract
 
   // owner
-  const alice = '0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1'
+  const alice = accounts[0]
 
   // new proposed owner
-  const bob = '0xFFcf8FDEE72ac11b5c542428B35EEF5769C409f0'
+  const aliceNewKey = accounts[1]
 
   // address book
-  const charlie = '0x22d491Bde2303f2f43325b2108D26f1eAbA1e32b'
-  const diana = '0xE11BA2b4D45Eaed5996Cd0823791E0C93114882d'
-  const eddy = '0xd03ea8624C8C5987235048901fB614fDcA89b117'
-  const frank = '0x95cED938F7991cd0dFcb48F0a06a40FA1aF46EBC'
-  const gina = '0x3E5e9111Ae8eB78Fe1CC3bb8915d5D461F3Ef9A9'
-  const hank = '0x28a8746e75304c0780E011BEd21C72cD78cd535E'
+  const bob = accounts[2]
+  const charlie = accounts[3]
+  const dave = accounts[4]
+  const eve = accounts[5]
+  const frank = accounts[6]
 
-  const addressBook = [charlie, diana, eddy, frank, gina, hank]
+  const addressBook = [bob, charlie, dave, eve]
+
+  const sign = async (msg, account) => {
+    let sig = await web3.eth.sign(msg, account)
+    return sig.substr(0, 130) + (sig.substr(130) === '00' ? '1b' : '1c')
+  }
 
   before('setup', async () => {
     contract = await Account.new()
@@ -39,9 +43,9 @@ contract('Contracts', (accounts) => {
     })
 
     it('should recover account given merkle proof', async () => {
-      const recoveryKey = frank
+      const recoveryKey = eve
       const currentOwner = alice
-      const newOwner = bob
+      const newOwner = aliceNewKey
 
       const leaves = addressBook.map(x => keccak256(x))
       const tree = new MerkleTree(leaves, keccak256, { sort: true })
@@ -49,8 +53,7 @@ contract('Contracts', (accounts) => {
       const proof = tree.getHexProof(leaf)
 
       const msg = '0x' + keccak256(newOwner).toString('hex')
-      let sig = await web3.eth.sign(msg, recoveryKey)
-      sig = sig.substr(0, 130) + (sig.substr(130) === '00' ? '1b' : '1c')
+      const sig = await sign(msg, recoveryKey)
 
       assert.equal(await contract.owner.call(), currentOwner)
       await contract.recover(proof, sig, newOwner)
@@ -64,10 +67,11 @@ contract('Contracts', (accounts) => {
     })
 
     it('should recover account given merkle proof', async () => {
-      const recoveryKey1 = frank
-      const recoveryKey2 = diana
+      const recoveryKey1 = eve
+      const recoveryKey2 = bob
+      const invalidRecoveryKey = frank
       const currentOwner = alice
-      const newOwner = bob
+      const newOwner = aliceNewKey
 
       const leaves = addressBook.map(x => keccak256(x))
       const tree = new MerkleTree(leaves, keccak256, { sort: true })
@@ -79,23 +83,32 @@ contract('Contracts', (accounts) => {
 
       const msg = '0x' + keccak256(newOwner).toString('hex')
 
-      let sig1 = await web3.eth.sign(msg, recoveryKey1)
-      sig1 = sig1.substr(0, 130) + (sig1.substr(130) === '00' ? '1b' : '1c')
-
-      let sig2 = await web3.eth.sign(msg, recoveryKey2)
-      sig2 = sig2.substr(0, 130) + (sig2.substr(130) === '00' ? '1b' : '1c')
+      const sig1 = await sign(msg, recoveryKey1)
+      const proof1 = tree.getHexProof(keccak256(recoveryKey1))
 
       assert.equal(await contract.owner.call(), currentOwner)
-
-      const proof1 = tree.getHexProof(keccak256(recoveryKey1))
       await contract.recover(proof1, sig1, newOwner)
 
-      assert.equal(await contract.owner.call(), currentOwner)
+      const sigInvalidAccount = await sign(msg, invalidRecoveryKey)
+      const proofInvalidAccount = tree.getHexProof(keccak256(invalidRecoveryKey))
 
+      try {
+        await contract.recover(proofInvalidAccount, sigInvalidAccount, newOwner)
+        assert.ok(false)
+      } catch(err) {
+        assert.ok(err)
+      }
+
+
+      const sig2 = await sign(msg, recoveryKey2)
       const proof2 = tree.getHexProof(keccak256(recoveryKey2))
+
+      assert.equal(await contract.owner.call(), currentOwner)
       await contract.recover(proof2, sig2, newOwner)
 
       assert.equal(await contract.owner.call(), newOwner)
     })
   })
 })
+
+

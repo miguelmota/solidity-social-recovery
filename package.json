@@ -7,14 +7,15 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "truffle test"
   },
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "ganache-cli": "^6.7.0",
     "keccak256": "^1.0.0",
-    "merkletreejs": "^0.1.7"
+    "merkletreejs": "^0.1.7",
+    "truffle": "^5.1.0"
   },
-  "dependencies": {
-  }
+  "dependencies": {}
 }
