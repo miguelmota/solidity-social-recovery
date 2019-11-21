@@ -1,0 +1,20 @@
+{
+  "name": "address-book-social-recovery",
+  "version": "1.0.0",
+  "description": "",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "keccak256": "^1.0.0",
+    "merkletreejs": "^0.1.7"
+  },
+  "dependencies": {
+  }
+}
