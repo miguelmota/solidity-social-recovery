@@ -1,7 +1,7 @@
-Solidity social recovery
+# Solidity social recovery
 
 > Social recovery using address book merkle proofs
 
 # License
 
-MIT
+[MIT](LICENSE)
